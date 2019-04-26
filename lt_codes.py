@@ -9,6 +9,8 @@ from core import Symbol
 import core
 from encoder import encode
 from decoder import decode
+from saveToFile import saveToFile
+from readFromFile import readFromFile
 
 def blocks_read(file, filesize):
     """ Read the given file by blocks of `core.PACKET_SIZE` and use np.frombuffer() improvement.
@@ -88,42 +90,18 @@ if __name__ == "__main__":
         print("Blocks: {}".format(file_blocks_n))
         print("Drops: {}\n".format(drops_quantity))
 
-        f = open("demofile.txt", "w")
+        
         
         # f.write("Now the file has more content!")
 
         # Generating symbols (or drops) from the blocks
-        file_symbols1 = []
-        print("________________________encode & write to file start_________________________________")
-        for curr_symbol in encode(file_blocks, drops_quantity=drops_quantity):
-            # with np.printoptions(threshold=np.inf):
-                # print(curr_symbol.index, curr_symbol.degree, curr_symbol.data)
-            f.write(str(curr_symbol.index) + ";" + str(curr_symbol.degree) + ";" + str(curr_symbol.index) + "-" + str(curr_symbol.degree) + ".npy" + ";;")
-            dir = os.path.dirname(__file__)
-            print(dir)
-            np.save(os.path.join(dir, "byteFiles/"+str(curr_symbol.index) + "-" + str(curr_symbol.degree)), curr_symbol.data)
-        print("_________________________encode & write to file end_________________________________")
-        f.close()
+        saveToFile(file_blocks, drops_quantity, "byteFiles")
 
-        f = open("demofile.txt", "r")
-        file_symbols1 = []
-        print("___________________________read & build from file start______________________________")
-        file_meta = f.read()
-        file_meta = file_meta.split(";;")
-        file_meta = file_meta[:-1]
-        for file_meta_part in file_meta:
-            file_meta_part = file_meta_part.split(";")
-            dataArray = np.load(os.path.join(dir, "byteFiles/"+file_meta_part[2]))
-            file_meta_part[0] = int(file_meta_part[0])
-            file_meta_part[1] = int(file_meta_part[1])
-            file_symbols1.append(Symbol(index=file_meta_part[0], degree=file_meta_part[1], data=dataArray))
-        # print("=====")
-        print("____________________________read & build from file end______________________________")
-        f.close()
-
+        
+        file_symbols1 = readFromFile("byteFiles")
 
         # HERE: Simulating the loss of packets?
-        file_symbols = file_symbols1[:-15]
+        file_symbols = file_symbols1
         # Recovering the blocks from symbols
         print("file size",len(file_symbols),len(file_symbols1))
 
