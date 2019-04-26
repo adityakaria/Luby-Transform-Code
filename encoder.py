@@ -30,7 +30,10 @@ def encode(blocks, drops_quantity):
     3.  Compute the output symbol as the combination of the neighbors.
         In other means, we XOR the chosen blocs to produce the symbol.
     """
-
+    # print("--------------\n", blocks)
+    # for i in blocks:
+    #     print(i)
+    # print("-----------------\n")
     # Display statistics
     blocks_n = len(blocks)
     assert blocks_n <= drops_quantity, "Because of the unicity in the random neighbors, it is need to drop at least the same amount of blocks"

@@ -5,6 +5,7 @@ import os
 import math
 import argparse
 import numpy as np
+from core import Symbol
 import core
 from encoder import encode
 from decoder import decode
@@ -12,7 +13,7 @@ from decoder import decode
 def blocks_read(file, filesize):
     """ Read the given file by blocks of `core.PACKET_SIZE` and use np.frombuffer() improvement.
 
-    Byt default, we store each octet into a np.uint8 array space, but it is also possible
+    By default, we store each octet into a np.uint8 array space, but it is also possible
     to store up to 8 octets together in a np.uint64 array space.  
     
     This process is not saving memory but it helps reduce dimensionnality, especially for the 
@@ -63,7 +64,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Robust implementation of LT Codes encoding/decoding process.")
     parser.add_argument("filename", help="file path of the file to split in blocks")
     parser.add_argument("-r", "--redundancy", help="the wanted redundancy.", default=2.0, type=float)
-    parser.add_argument("--systematic", help="ensure that the k first drops are exactaly the k first blocks (systematic LT Codes)", action="store_true")
+    parser.add_argument("--systematic", help="ensure that the k first drops are exactly the k first blocks (systematic LT Codes)", action="store_true")
     parser.add_argument("--verbose", help="increase output verbosity", action="store_true")
     parser.add_argument("--x86", help="avoid using np.uint64 for x86-32bits systems", action="store_true")
     args = parser.parse_args()
@@ -73,7 +74,6 @@ if __name__ == "__main__":
     core.VERBOSE = True if args.verbose else core.VERBOSE    
 
     with open(args.filename, "rb") as file:
-
         print("Redundancy: {}".format(args.redundancy))
         print("Systematic: {}".format(core.SYSTEMATIC))
 
@@ -88,14 +88,45 @@ if __name__ == "__main__":
         print("Blocks: {}".format(file_blocks_n))
         print("Drops: {}\n".format(drops_quantity))
 
+        f = open("demofile.txt", "w")
+        
+        # f.write("Now the file has more content!")
+
         # Generating symbols (or drops) from the blocks
-        file_symbols = []
+        file_symbols1 = []
+        print("________________________encode & write to file start_________________________________")
         for curr_symbol in encode(file_blocks, drops_quantity=drops_quantity):
-            file_symbols.append(curr_symbol)
+            # with np.printoptions(threshold=np.inf):
+                # print(curr_symbol.index, curr_symbol.degree, curr_symbol.data)
+            f.write(str(curr_symbol.index) + ";" + str(curr_symbol.degree) + ";" + str(curr_symbol.index) + "-" + str(curr_symbol.degree) + ".npy" + ";;")
+            dir = os.path.dirname(__file__)
+            print(dir)
+            np.save(os.path.join(dir, "byteFiles/"+str(curr_symbol.index) + "-" + str(curr_symbol.degree)), curr_symbol.data)
+        print("_________________________encode & write to file end_________________________________")
+        f.close()
+
+        f = open("demofile.txt", "r")
+        file_symbols1 = []
+        print("___________________________read & build from file start______________________________")
+        file_meta = f.read()
+        file_meta = file_meta.split(";;")
+        file_meta = file_meta[:-1]
+        for file_meta_part in file_meta:
+            file_meta_part = file_meta_part.split(";")
+            dataArray = np.load(os.path.join(dir, "byteFiles/"+file_meta_part[2]))
+            file_meta_part[0] = int(file_meta_part[0])
+            file_meta_part[1] = int(file_meta_part[1])
+            file_symbols1.append(Symbol(index=file_meta_part[0], degree=file_meta_part[1], data=dataArray))
+        # print("=====")
+        print("____________________________read & build from file end______________________________")
+        f.close()
+
 
         # HERE: Simulating the loss of packets?
-
+        file_symbols = file_symbols1[:-15]
         # Recovering the blocks from symbols
+        print("file size",len(file_symbols),len(file_symbols1))
+
         recovered_blocks, recovered_n = decode(file_symbols, blocks_quantity=file_blocks_n)
         
         if core.VERBOSE:

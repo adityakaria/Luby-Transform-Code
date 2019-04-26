@@ -8,8 +8,8 @@ from random import choices
 
 SYSTEMATIC = False
 VERBOSE = False
-PACKET_SIZE = 65536
-# PACKET_SIZE = 32768
+# PACKET_SIZE = 65536
+PACKET_SIZE = 32768
 # PACKET_SIZE = 16384
 # PACKET_SIZE = 4096
 # PACKET_SIZE = 1024
@@ -45,7 +45,7 @@ def generate_indexes(symbol_index, degree, blocks_quantity):
     To be sure to get the same random indexes, we need to pass 
     """
     if SYSTEMATIC and symbol_index < blocks_quantity:
-        indexes = [symbol_index]               
+        indexes = [symbol_index]
         degree = 1     
     else:
         random.seed(symbol_index)
